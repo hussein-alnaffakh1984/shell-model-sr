@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "shell-model-sr: information ceiling, ab-initio baseline, and A=18 spectra for the sd-shell effective interaction"
+authors:
+  - family-names: "Al-Naffakh"
+    given-names: "Hussein"
+date-released: 2026-05-30
+license: MIT
+url: "https://github.com/hussein-alnaffakh1984/shell-model-sr"

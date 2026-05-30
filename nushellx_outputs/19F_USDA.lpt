@@ -1,0 +1,14 @@
+! NuShellX@MSU level table  --  reconstructed/formatted from team report (Extended Generalization Report, Table 12)
+! Nucleus: 19F   Interaction: USDA   (sd shell, 16O core)
+! NOTE: Formatted from the team's tabulated NuShellX output; raw run held by the team.
+!  N  NJ     E(MeV)    Ex(MeV)   2J   2T   parity   file
+   1   1   -23.792     0.000      1    1     +    ba1301.lpe
+   2   1   -23.745     0.047      5    1     +    ba1305.lpe
+   3   1   -22.117     1.675      3    1     +    ba1303.lpe
+   4   1   -21.271     2.521      9    1     +    ba1309.lpe
+   5   1   -18.986     4.806      7    1     +    ba1307.lpe
+   6   2   -18.974     4.818      5    1     +    ba1305.lpe
+   7   2   -17.898     5.894      7    1     +    ba1307.lpe
+   8   2   -17.661     6.131      1    1     +    ba1301.lpe
+   9   3   -17.564     6.228      5    1     +    ba1305.lpe
+  10   3   -17.435     6.357      7    1     +    ba1307.lpe

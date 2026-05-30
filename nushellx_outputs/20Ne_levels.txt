@@ -1,0 +1,6 @@
+# 20Ne level energies quoted in team reports (USDA / N3LO*).  Ex in MeV.
+# NOTE: levels cited in comparison tables, NOT full NuShellX .lpt output.
+#       Full raw run held by the team; replace with 20Ne_USDA.lpt / 20Ne_N3LOstar.lpt.
+# Jpi        Exp     USDA    N3LO*
+2+_1       1.634    1.696    1.593
+4+_1       4.248    4.091    4.271

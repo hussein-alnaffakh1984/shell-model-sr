@@ -1,0 +1,10 @@
+# 18O level energies quoted in team reports (USDA / N3LO*).  Ex in MeV.
+# NOTE: These are the levels cited in the comparison tables, NOT the full
+#       NuShellX .lpt output. The complete raw run is held by the team and
+#       should replace this file (rename to 18O_USDA.lpt / 18O_N3LOstar.lpt).
+# Jpi        Exp     USDA    N3LO*
+2+_1       1.982    2.023    2.006
+4+_1       3.555    3.354    3.528
+0+_2       3.634    4.273    4.451
+2+_2       3.920    4.151    4.149
+3+_1       5.378    5.388    5.143

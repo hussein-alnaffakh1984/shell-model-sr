@@ -1,0 +1,8 @@
+! NuShellX@MSU level table  --  reconstructed/formatted from team report (Extended Generalization Report, Table 10)
+! Nucleus: 17O   Interaction: USDA   (sd shell, 16O core)
+! NOTE: This file is FORMATTED from the team's tabulated NuShellX output.
+!       The authoritative binary/raw NuShellX run is held by the computational team.
+!  N  NJ     E(MeV)    Ex(MeV)   2J   2T   parity   file
+   1   1    -3.944     0.000      5    1     +    ba0105.lpe
+   2   1    -3.061     0.882      1    1     +    ba0101.lpe
+   3   1     1.980     5.923      3    1     +    ba0103.lpe

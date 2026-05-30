@@ -1,0 +1,14 @@
+! NuShellX@MSU level table  --  reconstructed/formatted from team report (Extended Generalization Report, Table 13)
+! Nucleus: 19F   Interaction: N3LO* (chiral N3LO + USDA SPE + 18O-tuned correction)
+! NOTE: Formatted from the team's tabulated NuShellX output; raw run held by the team.
+!  N  NJ     E(MeV)    Ex(MeV)   2J   2T   parity   file
+   1   1   -24.345     0.000      1    1     +    bz1301.lpe
+   2   1   -23.936     0.409      5    1     +    bz1305.lpe
+   3   1   -22.793     1.552      3    1     +    bz1303.lpe
+   4   1   -21.236     3.110      9    1     +    bz1309.lpe
+   5   2   -18.870     5.475      5    1     +    bz1305.lpe
+   6   1   -18.655     5.691      7    1     +    bz1307.lpe
+   7   2   -18.538     5.807      7    1     +    bz1307.lpe
+   8   3   -17.575     6.771      5    1     +    bz1305.lpe
+   9   3   -17.271     7.074      7    1     +    bz1307.lpe
+  10   2   -17.153     7.192      1    1     +    bz1301.lpe

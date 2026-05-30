@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sd-Shell Interaction Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#FBFAF6;--panel:#FFF;--ink:#16233F;--ink-soft:#52607A;--line:#E3DECF;
+    --navy:#1F3864;--accent:#B4531F;--t0:#1F4E79;--t1:#C0392B;--green:#2E7D32;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",sans-serif;line-height:1.55;
+    background-image:radial-gradient(circle at 92% 0%,rgba(31,56,100,.05),transparent 40%);}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  header{padding:32px 0 20px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+  h1{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(1.7rem,4vw,2.6rem);color:var(--navy);line-height:1.05}
+  .sub{color:var(--ink-soft);margin-top:8px;max-width:70ch;font-size:.96rem}
+
+  .step{padding:22px 0}
+  .steplabel{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--panel)}
+  .seg button{font-family:"IBM Plex Sans";font-size:.9rem;font-weight:500;padding:9px 16px;border:none;background:transparent;
+    color:var(--ink-soft);cursor:pointer;transition:.15s;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:none}
+  .seg button.on{background:var(--navy);color:#fff}
+  .seg button:not(.on):hover{background:#F1EEE3}
+  .orline{margin:16px 0 10px;color:var(--ink-soft);font-size:.85rem;font-family:"IBM Plex Mono",monospace}
+  textarea{width:100%;min-height:130px;font-family:"IBM Plex Mono",monospace;font-size:.8rem;padding:12px 14px;
+    border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);resize:vertical}
+  .btn{margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:3px;border:none;
+    background:var(--accent);color:#fff;font-family:"IBM Plex Sans";font-weight:600;font-size:.95rem;cursor:pointer;transition:.15s}
+  .btn:hover{background:#9a4419}
+  .hint{font-size:.8rem;color:var(--ink-soft);margin-top:8px}
+  .err{color:var(--t1);font-size:.85rem;margin-top:10px;font-weight:500}
+
+  #results{display:none;border-top:1px solid var(--line);padding-top:8px}
+  .toprow{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px 0}
+  .badge{font-family:"IBM Plex Mono",monospace;font-size:.82rem;background:#F1EEE3;border:1px solid var(--line);
+    padding:7px 12px;border-radius:20px;color:var(--navy)}
+  .badge b{color:var(--accent)}
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:26px;padding:6px 0 40px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px 22px}
+  .card h3{font-family:"Fraunces",serif;font-weight:700;font-size:1.05rem;color:var(--navy);margin-bottom:4px}
+  .card .note{font-size:.82rem;color:var(--ink-soft);margin-bottom:10px}
+  .ctlrow{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;margin-bottom:8px}
+  .ctl label{display:block;font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+  .toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+  .switch{width:40px;height:23px;border-radius:13px;background:var(--line);position:relative;transition:.18s}
+  .switch.on{background:var(--accent)}
+  .switch:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.18s}
+  .switch.on:after{left:20px}
+  .legend{display:flex;gap:16px;margin-top:6px;font-size:.78rem;color:var(--ink-soft)}
+  .legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+  .gtrack{position:relative;height:10px;background:linear-gradient(90deg,#DCEAD9,#F3E2D3);border-radius:6px;border:1px solid var(--line);margin:30px 0 8px}
+  .gmark{position:absolute;top:-6px;width:2px;height:22px}.gmark.floor{background:var(--green)}.gmark.ceil{background:var(--t1)}
+  .gdot{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid #fff;
+    box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translate(-50%,-50%);transition:left .3s}
+  .glabel{position:absolute;top:-26px;font-family:"IBM Plex Mono",monospace;font-size:.64rem;transform:translateX(-50%);white-space:nowrap}
+  .rmse-val{font-family:"Fraunces",serif;font-weight:900;font-size:2rem;color:var(--accent)}
+  .rmse-val small{font-size:.85rem;color:var(--ink-soft);font-weight:600}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.85rem}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .pill{font-family:"IBM Plex Mono",monospace;font-size:.7rem;padding:2px 7px;border-radius:10px}
+  .pill.t0{background:#E7EEF6;color:var(--t0)}.pill.t1{background:#F8E7E5;color:var(--t1)}
+  .insight{background:#F1EEE3;border-left:3px solid var(--accent);padding:11px 14px;border-radius:0 3px 3px 0;font-size:.85rem;color:var(--ink-soft);margin-top:14px}
+  .insight b{color:var(--navy)}
+  footer{border-top:1px solid var(--line);padding:20px 0;font-size:.78rem;color:var(--ink-soft);text-align:center}
+  .mono{font-family:"IBM Plex Mono",monospace;font-size:.7rem}
+  .tmpl{width:100%;border-collapse:collapse;margin-top:6px;max-width:580px}
+  .tmpl td{padding:9px 6px;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:middle}
+  .tmpl .fmt{font-weight:600;color:var(--navy);font-family:"IBM Plex Mono",monospace;font-size:.85rem;width:120px}
+  .btn-sm{padding:7px 13px;border-radius:3px;border:1px solid var(--line);background:var(--panel);color:var(--navy);
+    font-size:.82rem;font-weight:500;cursor:pointer;font-family:"IBM Plex Sans";transition:.15s}
+  .btn-sm:hover{background:#F1EEE3}
+  .btn-sm.up{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .btn-sm.up:hover{background:#162a4d}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}.tmpl .fmt{width:auto}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="eyebrow">Shell-Model SR · prediction tool</div>
+  <h1>sd-Shell Interaction Predictor</h1>
+  <p class="sub">Give it <b>any</b> sd-shell interaction — pick a known one or <b>paste your own .int file</b>. The tool computes its A = 18 spectra live, measures its RMSE to USDB, auto-fits the per-isospin monopole correction, and predicts the corrected spectrum.</p>
+</div></header>
+
+<div class="wrap">
+  <div class="step">
+    <div class="steplabel">Step 1 · choose or paste an interaction</div>
+    <div class="seg" id="presets">
+      <button data-v="USDB" class="on">USDB</button>
+      <button data-v="JISP">JISP16</button>
+      <button data-v="N3LO">N3LO</button>
+      <button data-v="WILDENTHAL">Wildenthal</button>
+    </div>
+    <div class="orline">— or paste your own sd .int file (orbit order 1 = d3/2, 2 = d5/2, 3 = s1/2) —</div>
+    <textarea id="intText" placeholder="Paste a standard .int file here, then press Predict. First data line = header (count + 3 single-particle energies), then rows: a b c d J T V ..."></textarea>
+    <div><button class="btn" id="predictBtn">Predict →</button></div>
+    <div class="hint" id="hint">Tip: the four preset buttons run instantly. Pasting a file uses the same engine.</div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="step" style="border-top:1px solid var(--line)">
+    <div class="steplabel">Easier · download a template, fill it, upload it</div>
+    <table class="tmpl">
+      <tr><td class="fmt">.int file</td>
+        <td><button class="btn-sm" onclick="dlINT()">↓ Download example</button></td>
+        <td><button class="btn-sm up" onclick="pick('int')">↑ Upload .int</button></td></tr>
+      <tr><td class="fmt">CSV</td>
+        <td><button class="btn-sm" onclick="dlCSV()">↓ Download template</button></td>
+        <td><button class="btn-sm up" onclick="pick('csv')">↑ Upload CSV</button></td></tr>
+      <tr><td class="fmt">Excel (.xlsx)</td>
+        <td><button class="btn-sm" onclick="dlXLSX()">↓ Download template</button></td>
+        <td><button class="btn-sm up" onclick="pick('xlsx')">↑ Upload Excel</button></td></tr>
+    </table>
+    <input type="file" id="fileInput" style="display:none">
+    <div class="hint">Download a template → edit the <b>value</b> column → upload. The structure (which matrix elements exist) is already filled in for you, so you only change numbers.</div>
+  </div>
+
+  <div id="results">
+    <div class="toprow">
+      <div class="badge">interaction: <b id="bName">—</b></div>
+      <div class="badge">RMSE to USDB: <b id="bRmse">—</b></div>
+      <div class="badge">auto-fitted Δ: <b id="bDelta">—</b></div>
+    </div>
+    <div class="ctlrow">
+      <div class="ctl"><label>Nucleus</label>
+        <div class="seg" id="nuc"><button data-v="18O" class="on">¹⁸O</button><button data-v="18F">¹⁸F</button></div></div>
+      <div class="ctl"><label>Monopole correction</label>
+        <div class="toggle" id="corrToggle"><div class="switch" id="switch"></div><span id="corrLabel">off</span></div></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3 id="schemeTitle">Level scheme</h3>
+        <div class="note">Excitation energy (MeV). Experiment vs your interaction's prediction.</div>
+        <div id="scheme"></div>
+        <div class="legend"><span><i style="background:var(--t0)"></i>T = 0</span><span><i style="background:var(--t1)"></i>T = 1</span></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>Agreement with USDB</h3>
+          <div class="note">RMSE of this interaction's matrix elements vs USDB.</div>
+          <div class="rmse-val" id="rmseVal">—</div>
+          <div class="gtrack"><div class="gmark floor" style="left:17.8%"><div class="glabel" style="color:var(--green)">floor 0.267</div></div>
+            <div class="gmark ceil" style="left:92%"><div class="glabel" style="color:var(--t1)">ML ceiling 1.38</div></div>
+            <div class="gdot" id="gdot" style="left:0%"></div></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h3>Predicted levels</h3>
+          <table><thead><tr><th>Jπ</th><th>T</th><th class="r">Predict</th><th class="r">+corr</th><th class="r">Exp.</th></tr></thead><tbody id="levTable"></tbody></table>
+          <div class="insight" id="insight"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer><div class="wrap">
+  <div>Live two-body CI · verified against the Python pipeline · data: CoSMo (A. Volya)</div>
+  <div class="mono"><a href="https://github.com/hussein-alnaffakh1984/shell-model-sr">github.com/hussein-alnaffakh1984/shell-model-sr</a></div>
+</div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const PRESETS = {"USDB": {"spe": {"1": 2.1117, "2": -3.9257, "3": -3.2079}, "tbme": [[2, 2, 2, 2, 1, 0, -1.3796], [2, 2, 2, 1, 1, 0, 3.4987], [2, 2, 1, 1, 1, 0, 1.6647], [2, 2, 1, 3, 1, 0, 0.0272], [2, 2, 3, 3, 1, 0, -0.5344], [2, 1, 2, 1, 1, 0, -6.0099], [2, 1, 1, 1, 1, 0, 0.1922], [2, 1, 1, 3, 1, 0, 1.6231], [2, 1, 3, 3, 1, 0, 2.0226], [1, 1, 1, 1, 1, 0, -1.6582], [1, 1, 1, 3, 1, 0, -0.8493], [1, 1, 3, 3, 1, 0, 0.1574], [1, 3, 1, 3, 1, 0, -4.046], [1, 3, 3, 3, 1, 0, -0.9201], [3, 3, 3, 3, 1, 0, -3.7093], [2, 1, 2, 1, 2, 0, -4.2117], [2, 1, 2, 3, 2, 0, -0.6464], [2, 1, 1, 3, 2, 0, -0.4429], [2, 3, 2, 3, 2, 0, -0.3154], [2, 3, 1, 3, 2, 0, -2.511], [1, 3, 1, 3, 2, 0, -1.8504], [2, 2, 2, 2, 3, 0, -1.6651], [2, 2, 2, 1, 3, 0, 2.3102], [2, 2, 2, 3, 3, 0, -1.2167], [2, 2, 1, 1, 3, 0, 1.1792], [2, 1, 2, 1, 3, 0, -1.2124], [2, 1, 2, 3, 3, 0, 1.2526], [2, 1, 1, 1, 3, 0, 1.43], [2, 3, 2, 3, 3, 0, -4.1823], [2, 3, 1, 1, 3, 0, 0.0968], [1, 1, 1, 1, 3, 0, -2.966], [2, 1, 2, 1, 4, 0, -4.6189], [2, 2, 2, 2, 5, 0, -4.3205], [2, 2, 2, 2, 0, 1, -2.5598], [2, 2, 1, 1, 0, 1, -3.1025], [2, 2, 3, 3, 0, 1, -1.5602], [1, 1, 1, 1, 0, 1, -1.8992], [1, 1, 3, 3, 0, 1, -1.015], [3, 3, 3, 3, 0, 1, -1.6913], [2, 1, 2, 1, 1, 1, 0.6556], [2, 1, 1, 3, 1, 1, -0.0456], [1, 3, 1, 3, 1, 1, 0.5158], [2, 2, 2, 2, 2, 1, -1.0007], [2, 2, 2, 1, 2, 1, -0.2137], [2, 2, 2, 3, 2, 1, -0.9317], [2, 2, 1, 1, 2, 1, -1.2187], [2, 2, 1, 3, 2, 1, 0.8866], [2, 1, 2, 1, 2, 1, -0.1545], [2, 1, 2, 3, 2, 1, -0.3147], [2, 1, 1, 1, 2, 1, -0.5032], [2, 1, 1, 3, 2, 1, 0.3713], [2, 3, 2, 3, 2, 1, -0.9405], [2, 3, 1, 1, 2, 1, -0.3173], [2, 3, 1, 3, 2, 1, 1.6131], [1, 1, 1, 1, 2, 1, -0.0974], [1, 1, 1, 3, 2, 1, 0.3494], [1, 3, 1, 3, 2, 1, -0.3034], [2, 1, 2, 1, 3, 1, 0.7673], [2, 1, 2, 3, 3, 1, -0.5525], [2, 3, 2, 3, 3, 1, 0.6841], [2, 2, 2, 2, 4, 1, -0.2069], [2, 2, 2, 1, 4, 1, -1.3349], [2, 1, 2, 1, 4, 1, -1.4447]]}, "JISP": {"spe": {"1": -0.0, "2": 0.0, "3": -0.0}, "tbme": [[3, 3, 3, 3, 0, 1, -2.182], [3, 3, 1, 1, 0, 1, -0.924], [3, 3, 2, 2, 0, 1, -1.274], [1, 1, 1, 1, 0, 1, -0.958], [1, 1, 2, 2, 0, 1, -3.397], [2, 2, 2, 2, 0, 1, -2.525], [3, 3, 3, 3, 1, 0, -3.302], [3, 3, 3, 1, 1, 0, -0.378], [3, 3, 1, 1, 1, 0, 0.231], [3, 3, 1, 2, 1, 0, 2.054], [3, 3, 2, 2, 1, 0, -0.936], [3, 1, 3, 1, 1, 0, -3.412], [3, 1, 1, 1, 1, 0, -1.38], [3, 1, 1, 2, 1, 0, 1.455], [3, 1, 2, 2, 1, 0, 0.525], [1, 1, 1, 1, 1, 0, -0.931], [1, 1, 1, 2, 1, 0, -0.172], [1, 1, 2, 2, 1, 0, 2.511], [1, 2, 1, 2, 1, 0, -5.997], [1, 2, 2, 2, 1, 0, 3.579], [2, 2, 2, 2, 1, 0, -1.047], [3, 1, 3, 1, 1, 1, 0.007], [3, 1, 1, 2, 1, 1, 0.042], [1, 2, 1, 2, 1, 1, -0.097], [3, 1, 3, 1, 2, 0, -1.267], [3, 1, 3, 2, 2, 0, -2.969], [3, 1, 1, 2, 2, 0, -1.873], [3, 2, 3, 2, 2, 0, -0.081], [3, 2, 1, 2, 2, 0, -1.597], [1, 2, 1, 2, 2, 0, -4.133], [3, 1, 3, 1, 2, 1, -0.618], [3, 1, 3, 2, 2, 1, 1.504], [3, 1, 1, 1, 2, 1, 0.185], [3, 1, 1, 2, 2, 1, 0.601], [3, 1, 2, 2, 2, 1, 1.005], [3, 2, 3, 2, 2, 1, -1.469], [3, 2, 1, 1, 2, 1, -0.84], [3, 2, 1, 2, 2, 1, -0.374], [3, 2, 2, 2, 2, 1, -0.78], [1, 1, 1, 1, 2, 1, -0.247], [1, 1, 1, 2, 2, 1, -0.933], [1, 1, 2, 2, 2, 1, -0.73], [1, 2, 1, 2, 2, 1, -0.272], [1, 2, 2, 2, 2, 1, 0.352], [2, 2, 2, 2, 2, 1, -1.216], [3, 2, 3, 2, 3, 0, -3.832], [3, 2, 1, 1, 3, 0, 0.068], [3, 2, 1, 2, 3, 0, 1.373], [3, 2, 2, 2, 3, 0, -1.766], [1, 1, 1, 1, 3, 0, -2.752], [1, 1, 1, 2, 3, 0, 2.0], [1, 1, 2, 2, 3, 0, 0.961], [1, 2, 1, 2, 3, 0, -0.669], [1, 2, 2, 2, 3, 0, 2.308], [2, 2, 2, 2, 3, 0, -0.724], [3, 2, 3, 2, 3, 1, 0.176], [3, 2, 1, 2, 3, 1, -0.356], [1, 2, 1, 2, 3, 1, 0.072], [1, 2, 1, 2, 4, 0, -4.354], [1, 2, 1, 2, 4, 1, -1.903], [1, 2, 2, 2, 4, 1, -1.303], [2, 2, 2, 2, 4, 1, -0.365], [2, 2, 2, 2, 5, 0, -3.928]]}, "N3LO": {"spe": {"1": 0.0, "2": 0.0, "3": 0.0}, "tbme": [[3, 3, 3, 3, 0, 1, -2.106], [3, 3, 1, 1, 0, 1, -0.991], [3, 3, 2, 2, 0, 1, -1.268], [1, 1, 1, 1, 0, 1, -0.858], [1, 1, 2, 2, 0, 1, -3.538], [2, 2, 2, 2, 0, 1, -2.278], [3, 3, 3, 3, 1, 0, -3.089], [3, 3, 3, 1, 1, 0, -0.022], [3, 3, 1, 1, 1, 0, 0.175], [3, 3, 1, 2, 1, 0, 2.315], [3, 3, 2, 2, 1, 0, -0.75], [3, 1, 3, 1, 1, 0, -3.87], [3, 1, 1, 1, 1, 0, -1.149], [3, 1, 1, 2, 1, 0, 1.568], [3, 1, 2, 2, 1, 0, 0.355], [1, 1, 1, 1, 1, 0, -0.873], [1, 1, 1, 2, 1, 0, -0.217], [1, 1, 2, 2, 1, 0, 2.265], [1, 2, 1, 2, 1, 0, -5.62], [1, 2, 2, 2, 1, 0, 3.377], [2, 2, 2, 2, 1, 0, -1.011], [3, 1, 3, 1, 1, 1, -0.076], [3, 1, 1, 2, 1, 1, -0.157], [1, 2, 1, 2, 1, 1, -0.337], [3, 1, 3, 1, 2, 0, -1.576], [3, 1, 3, 2, 2, 0, -2.623], [3, 1, 1, 2, 2, 0, -1.98], [3, 2, 3, 2, 2, 0, -0.503], [3, 2, 1, 2, 2, 0, -1.703], [1, 2, 1, 2, 2, 0, -4.341], [3, 1, 3, 1, 2, 1, -0.66], [3, 1, 3, 2, 2, 1, 1.569], [3, 1, 1, 1, 2, 1, 0.188], [3, 1, 1, 2, 2, 1, 0.695], [3, 1, 2, 2, 2, 1, 0.883], [3, 2, 3, 2, 2, 1, -1.434], [3, 2, 1, 1, 2, 1, -0.869], [3, 2, 1, 2, 2, 1, -0.298], [3, 2, 2, 2, 2, 1, -0.802], [1, 1, 1, 1, 2, 1, -0.259], [1, 1, 1, 2, 2, 1, -0.885], [1, 1, 2, 2, 2, 1, -0.813], [1, 2, 1, 2, 2, 1, -0.408], [1, 2, 2, 2, 2, 1, -0.359], [2, 2, 2, 2, 2, 1, -1.256], [3, 2, 3, 2, 3, 0, -3.797], [3, 2, 1, 1, 3, 0, 0.155], [3, 2, 1, 2, 3, 0, 1.206], [3, 2, 2, 2, 3, 0, -1.648], [1, 1, 1, 1, 3, 0, -2.596], [1, 1, 1, 2, 3, 0, 1.819], [1, 1, 2, 2, 3, 0, 0.564], [1, 2, 1, 2, 3, 0, -1.092], [1, 2, 2, 2, 3, 0, 1.94], [2, 2, 2, 2, 3, 0, -0.947], [3, 2, 3, 2, 3, 1, -0.007], [3, 2, 1, 2, 3, 1, -0.094], [1, 2, 1, 2, 3, 1, -0.146], [1, 2, 1, 2, 4, 0, -4.543], [1, 2, 1, 2, 4, 1, -1.993], [1, 2, 2, 2, 4, 1, -1.319], [2, 2, 2, 2, 4, 1, -0.369], [2, 2, 2, 2, 5, 0, -3.724]]}, "WILDENTHAL": {"spe": {"1": 1.6466, "2": -3.9478, "3": -3.1635}, "tbme": [[1, 1, 1, 1, 0, 1, -2.1845], [1, 1, 1, 1, 1, 0, -1.4151], [1, 1, 1, 1, 2, 1, -0.0665], [1, 1, 1, 1, 3, 0, -2.8842], [2, 1, 1, 1, 1, 0, 0.5647], [2, 1, 1, 1, 2, 1, -0.6149], [2, 1, 1, 1, 3, 0, 2.0337], [2, 1, 2, 1, 1, 0, -6.5058], [2, 1, 2, 1, 1, 1, 1.0334], [2, 1, 2, 1, 2, 0, -3.8253], [2, 1, 2, 1, 2, 1, -0.3248], [2, 1, 2, 1, 3, 0, -0.5377], [2, 1, 2, 1, 3, 1, 0.5894], [2, 1, 2, 1, 4, 0, -4.5062], [2, 1, 2, 1, 4, 1, -1.4497], [2, 1, 3, 1, 1, 0, -1.708], [2, 1, 3, 1, 1, 1, 0.1874], [2, 1, 3, 1, 2, 0, 0.2832], [2, 1, 3, 1, 2, 1, -0.5247], [2, 1, 3, 3, 1, 0, 2.1042], [2, 2, 1, 1, 0, 1, -3.1856], [2, 2, 1, 1, 1, 0, 0.7221], [2, 2, 1, 1, 2, 1, -1.6221], [2, 2, 1, 1, 3, 0, 1.8949], [2, 2, 2, 1, 1, 0, 2.5435], [2, 2, 2, 1, 2, 1, -0.2828], [2, 2, 2, 1, 3, 0, 2.2216], [2, 2, 2, 1, 4, 1, -1.2363], [2, 2, 2, 2, 0, 1, -2.8197], [2, 2, 2, 2, 1, 0, -1.6321], [2, 2, 2, 2, 2, 1, -1.002], [2, 2, 2, 2, 3, 0, -1.5012], [2, 2, 2, 2, 4, 1, -0.1641], [2, 2, 2, 2, 5, 0, -4.2256], [2, 2, 3, 1, 1, 0, -1.1026], [2, 2, 3, 1, 2, 1, -0.6198], [2, 2, 3, 2, 2, 1, -0.8616], [2, 2, 3, 2, 3, 0, -1.242], [2, 2, 3, 3, 0, 1, -1.3247], [2, 2, 3, 3, 1, 0, -1.1756], [3, 1, 1, 1, 1, 0, 0.3983], [3, 1, 1, 1, 2, 1, -0.5154], [3, 1, 3, 1, 1, 0, -4.293], [3, 1, 3, 1, 1, 1, 0.6066], [3, 1, 3, 1, 2, 0, -1.8194], [3, 1, 3, 1, 2, 1, -0.4064], [3, 2, 1, 1, 2, 1, -0.4041], [3, 2, 1, 1, 3, 0, 0.1887], [3, 2, 2, 1, 2, 0, 0.0968], [3, 2, 2, 1, 2, 1, -0.477], [3, 2, 2, 1, 3, 0, 1.2032], [3, 2, 2, 1, 3, 1, 0.6741], [3, 2, 3, 1, 2, 0, 2.0664], [3, 2, 3, 1, 2, 1, -1.941], [3, 2, 3, 2, 2, 0, -1.4474], [3, 2, 3, 2, 2, 1, -0.8183], [3, 2, 3, 2, 3, 0, -3.8598], [3, 2, 3, 2, 3, 1, 0.7626], [3, 3, 1, 1, 0, 1, -1.0835], [3, 3, 1, 1, 1, 0, 0.0275], [3, 3, 3, 1, 1, 0, 1.2501], [3, 3, 3, 3, 0, 1, -2.1246], [3, 3, 3, 3, 1, 0, -3.2628]]}};
+const JJ={1:1.5,2:2.5,3:0.5}, ORBS=[1,2,3];
+const EXP={ "18O":[[0,0,1],[1.98,2,1],[3.55,4,1]], "18F":[[0,1,0],[0.937,3,0],[1.042,0,1],[1.121,5,0]] };
+const ML_CEIL=1.38, FLOOR=0.267;
+
+function buildStore(rows){const s={};for(const [a,b,c,d,J,T,V] of rows)s[[a,b,c,d,J,T]]=V;return s;}
+function getV(st,a,b,c,d,J,T){const F=(p,q)=>{const ph=-Math.pow(-1,Math.round(JJ[p]+JJ[q]-J-T));return [[[p,q],1],[[q,p],ph]];};
+  for(const [ab,pab] of F(a,b))for(const [cd,pcd] of F(c,d)){let k=[ab[0],ab[1],cd[0],cd[1],J,T];if(k in st)return st[k]*pab*pcd;
+    let k2=[cd[0],cd[1],ab[0],ab[1],J,T];if(k2 in st)return st[k2]*pab*pcd;}return 0;}
+function pairs(){const p=[];for(let i=0;i<3;i++)for(let j=i;j<3;j++)p.push([ORBS[i],ORBS[j]]);return p;}
+function jacobi(A){const n=A.length,a=A.map(r=>r.slice());for(let s=0;s<100;s++){let off=0;
+  for(let p=0;p<n;p++)for(let q=p+1;q<n;q++)off+=a[p][q]*a[p][q];if(off<1e-14)break;
+  for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){if(Math.abs(a[p][q])<1e-15)continue;
+    const th=(a[q][q]-a[p][p])/(2*a[p][q]),t=Math.sign(th)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),si=t*c;
+    for(let k=0;k<n;k++){const x=a[k][p],y=a[k][q];a[k][p]=c*x-si*y;a[k][q]=si*x+c*y;}
+    for(let k=0;k<n;k++){const x=a[p][k],y=a[q][k];a[p][k]=c*x-si*y;a[q][k]=si*x+c*y;}}}
+  return a.map((r,i)=>r[i]).sort((x,y)=>x-y);}
+function channel(st,J,T,spe){const basis=[];for(const [a,b] of pairs()){const ja=JJ[a],jb=JJ[b];
+  if(a===b){if((J+T)%2===0||J>2*ja)continue;}else{if(J<Math.abs(ja-jb)||J>ja+jb)continue;}basis.push([a,b]);}
+  if(!basis.length)return null;const n=basis.length,H=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++){const [a,b]=basis[i];for(let k=0;k<n;k++){const [c,d]=basis[k];H[i][k]=getV(st,a,b,c,d,J,T);}H[i][i]+=spe[a]+spe[b];}
+  return jacobi(H);}
+function levels(st,chs,spe,emax=4.2){const sp={};let gs=Infinity;
+  for(const T of chs)for(let J=0;J<6;J++){const ev=channel(st,J,T,spe);if(ev){sp[[J,T]]=ev;gs=Math.min(gs,ev[0]);}}
+  const rows=[];for(const key in sp){const [J,T]=key.split(',').map(Number);for(const e of sp[key]){const ex=e-gs;if(ex>=-1e-6&&ex<=emax)rows.push([+ex.toFixed(3),J,T]);}}
+  return rows.sort((a,b)=>a[0]-b[0]);}
+function monopole(st){const num={},den={};for(const k in st){const [a,b,c,d,J,T]=k.split(',').map(Number);
+  if(a===c&&b===d){const key=[Math.min(a,b),Math.max(a,b),T];num[key]=(num[key]||0)+(2*J+1)*st[k];den[key]=(den[key]||0)+(2*J+1);}}
+  const m={};for(const key in num)m[key]=num[key]/den[key];return m;}
+function canon(st){const o={};for(const k in st){let [a,b,c,d,J,T]=k.split(',').map(Number);
+  let br=[a,b].sort((x,y)=>x-y),ke=[c,d].sort((x,y)=>x-y);if(br[0]>ke[0]||(br[0]===ke[0]&&br[1]>ke[1]))[br,ke]=[ke,br];
+  o[[br[0],br[1],ke[0],ke[1],J,T]]=st[k];}return o;}
+function rmse(st,ref){const a=canon(st),b=canon(ref);let s=0,n=0;for(const k in a)if(k in b){s+=(a[k]-b[k])**2;n++;}return n?Math.sqrt(s/n):null;}
+function fitCorr(st,ref){const m=monopole(st),mr=monopole(ref),out={0:0,1:0};for(const T of [0,1]){let s=0,n=0;
+  for(const k in m){const [a,b,t]=k.split(',').map(Number);if(t===T&&k in mr){s+=mr[k]-m[k];n++;}}out[T]=n?s/n:0;}return out;}
+function applyCorr(st,d){const o={};for(const k in st){const [a,b,c,d2,J,T]=k.split(',').map(Number);o[k]=st[k]+((a===c&&b===d2)?(d[T]||0):0);}return o;}
+function parseInt_(text){let started=false,spe={},rows=[];for(const line of text.split(/\r?\n/)){const tr=line.trim();
+  if(!tr||tr.startsWith('!'))continue;const x=tr.split(/\s+/);
+  if(!started){started=true;const s=[+x[1],+x[2],+x[3]];if(s.every(v=>!isNaN(v)))spe={1:s[0],2:s[1],3:s[2]};continue;}
+  if(x.length<7)continue;const a=+x[0],b=+x[1],c=+x[2],d=+x[3],J=+x[4],T=+x[5],V=+x[6];
+  if([a,b,c,d,J,T,V].some(isNaN))continue;rows.push([a,b,c,d,J,T,V]);}return {spe,rows};}
+
+const USDB=buildStore(PRESETS.USDB.tbme);
+const USPE={1:PRESETS.USDB.spe['1'],2:PRESETS.USDB.spe['2'],3:PRESETS.USDB.spe['3']};
+let R=null, view={nuc:"18O",corr:false};
+
+function compute(name, rows, spe){
+  const st=buildStore(rows);
+  const abInitio=[1,2,3].every(i=>Math.abs((spe&&spe[i])||0)<1e-9);
+  const useSpe = abInitio ? USPE : {1:spe[1],2:spe[2],3:spe[3]};
+  const r=rmse(st,USDB), d=fitCorr(st,USDB), stc=applyCorr(st,d);
+  return {name, rmse:r, delta:d, spe:useSpe, abInitio,
+    base:{ "18O":levels(st,[1],useSpe), "18F":levels(st,[0,1],useSpe) },
+    corr:{ "18O":levels(stc,[1],useSpe), "18F":levels(stc,[0,1],useSpe) } };
+}
+function jpi(J){return J+"\u207A";}
+function match(lv,J,T){const m=lv.find(x=>x[1]===J&&x[2]===T);return m?m[0]:null;}
+
+function render(){
+  if(!R)return;
+  document.getElementById("results").style.display="block";
+  document.getElementById("bName").textContent=R.name;
+  document.getElementById("bRmse").textContent=(R.rmse!=null?R.rmse.toFixed(3)+" MeV":"\u2014");
+  document.getElementById("bDelta").textContent=`T0 ${R.delta[0]>=0?"+":""}${R.delta[0].toFixed(3)}, T1 ${R.delta[1]>=0?"+":""}${R.delta[1].toFixed(3)}`;
+  const cor = view.corr;
+  const spec = (cor?R.corr:R.base)[view.nuc];
+  document.getElementById("schemeTitle").textContent=(view.nuc==="18O"?"\u00B9\u2078O":"\u00B9\u2078F")+"  \u2014  "+R.name+(cor?" + monopole corr.":"");
+  drawScheme(spec);
+  drawTable();
+  // gauge
+  const dot=document.getElementById("gdot");
+  if(R.rmse==null||R.rmse<1e-9){document.getElementById("rmseVal").innerHTML='target <small>(reference)</small>';dot.style.opacity=".25";dot.style.left="0%";}
+  else{document.getElementById("rmseVal").innerHTML=R.rmse.toFixed(3)+' <small>MeV</small>';dot.style.opacity="1";dot.style.left=Math.min(100,(R.rmse/1.5)*100)+"%";}
+  // insight
+  let msg="";
+  if(view.nuc==="18F"&&cor) msg='<b>Watch the 0\u207A(T=1) analog state:</b> the correction lowers the matrix-element RMSE, yet it can push this state <i>away</i> from experiment (1.04 MeV). Lower TBME error \u2260 better spectroscopy.';
+  else if(view.nuc==="18O"&&cor) msg='A uniform per-T monopole shift cancels in same-T excitation energies, so the \u00B9\u2078O levels are unchanged.';
+  else if(R.rmse!=null&&R.rmse<0.6) msg='<b>Close to USDB ('+R.rmse.toFixed(3)+' MeV):</b> a strong interaction \u2014 it predicts the spectrum well with no fitting.';
+  else if(R.rmse!=null) msg='RMSE '+R.rmse.toFixed(2)+' MeV \u2014 farther from USDB; the monopole correction (\u0394 above) is the leading fix.';
+  document.getElementById("insight").innerHTML=msg;
+}
+function drawScheme(spec){
+  const W=520,H=430,mT=30,mB=42,mL=44,Emax=view.nuc==="18O"?4.0:2.2;
+  const yOf=e=>H-mB-(e/Emax)*(H-mT-mB);
+  const cols=[{x:175,label:"Experiment",data:EXP[view.nuc].map(r=>({E:r[0],J:r[1],T:r[2]}))},
+              {x:380,label:R.name,data:spec.filter(d=>d[0]<=Emax).map(d=>({E:d[0],J:d[1],T:d[2]}))}];
+  let s=`<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${H-mB}" stroke="#999"/>`;
+  for(let e=0;e<=Emax+0.01;e++){const y=yOf(e);s+=`<line x1="${mL-4}" y1="${y}" x2="${mL}" y2="${y}" stroke="#999"/>`;
+    s+=`<text x="${mL-8}" y="${y+4}" font-size="11" fill="#666" text-anchor="end" font-family="IBM Plex Mono">${e}</text>`;
+    s+=`<line x1="${mL}" y1="${y}" x2="${W-12}" y2="${y}" stroke="#EEE9DC"/>`;}
+  s+=`<text x="14" y="${(mT+H-mB)/2}" font-size="11" fill="#52607A" font-family="IBM Plex Mono" transform="rotate(-90 14 ${(mT+H-mB)/2})" text-anchor="middle">excitation energy (MeV)</text>`;
+  const hw=58;
+  cols.forEach(col=>{s+=`<text x="${col.x}" y="${mT-12}" font-size="12.5" fill="#1F3864" font-weight="600" text-anchor="middle" font-family="IBM Plex Sans">${col.label}</text>`;
+    col.data.forEach(d=>{const y=yOf(d.E),c=d.T===0?"#1F4E79":"#C0392B";
+      s+=`<line x1="${col.x-hw}" y1="${y}" x2="${col.x+hw}" y2="${y}" stroke="${c}" stroke-width="2.4"/>`;
+      s+=`<text x="${col.x+hw+5}" y="${y+4}" font-size="11.5" fill="${c}" font-family="IBM Plex Sans" font-weight="500">${jpi(d.J)}</text>`;});});
+  document.getElementById("scheme").innerHTML='<svg viewBox="0 0 520 430" width="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+}
+function drawTable(){
+  const base=R.base[view.nuc], corr=R.corr[view.nuc];
+  const rows=EXP[view.nuc].map(([e,J,T])=>({J,T,b:match(base,J,T),c:match(corr,J,T),e}));
+  document.getElementById("levTable").innerHTML=rows.map(r=>
+    `<tr><td>${jpi(r.J)}</td><td><span class="pill t${r.T}">T=${r.T}</span></td>`+
+    `<td class="r">${r.b!=null?r.b.toFixed(2):"\u2014"}</td><td class="r">${r.c!=null?r.c.toFixed(2):"\u2014"}</td>`+
+    `<td class="r">${r.e.toFixed(2)}</td></tr>`).join("");
+}
+
+// controls
+document.querySelectorAll("#presets button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#presets button").forEach(x=>x.classList.remove("on"));b.classList.add("on");
+  const name=b.dataset.v, P=PRESETS[name];
+  const spe={1:P.spe['1'],2:P.spe['2'],3:P.spe['3']};
+  document.getElementById("err").textContent="";
+  R=compute(name==="WILDENTHAL"?"Wildenthal":(name==="JISP"?"JISP16":name), P.tbme, spe);
+  render();
+});
+document.getElementById("predictBtn").onclick=()=>{
+  const txt=document.getElementById("intText").value.trim();
+  const err=document.getElementById("err"); err.textContent="";
+  if(!txt){err.textContent="Paste an .int file first, or use a preset button above.";return;}
+  try{ const {spe,rows}=parseInt_(txt);
+    if(rows.length<5){err.textContent="Could not read enough matrix elements. Check the file format (rows: a b c d J T V).";return;}
+    document.querySelectorAll("#presets button").forEach(x=>x.classList.remove("on"));
+    R=compute("your interaction", rows, spe); render();
+    document.getElementById("results").scrollIntoView({behavior:"smooth"});
+  }catch(e){ err.textContent="Parse error: "+e.message; }
+};
+document.querySelectorAll("#nuc button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#nuc button").forEach(x=>x.classList.remove("on"));b.classList.add("on");view.nuc=b.dataset.v;render();});
+document.getElementById("corrToggle").onclick=()=>{view.corr=!view.corr;
+  document.getElementById("switch").classList.toggle("on",view.corr);
+  document.getElementById("corrLabel").textContent=view.corr?"on":"off";render();};
+
+// ---- templates: download / upload ----
+function download(name,data,mime){const blob=(data instanceof Blob)?data:new Blob([data],{type:mime||'text/plain'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function tmplAOA(){const P=PRESETS.USDB;const aoa=[["kind","a","b","c","d","J","T","value"]];
+  for(const o of [1,2,3])aoa.push(["SPE",o,"","","","","",P.spe[String(o)]]);
+  for(const r of P.tbme)aoa.push(["TBME",r[0],r[1],r[2],r[3],r[4],r[5],r[6]]);return aoa;}
+function dlCSV(){const body=tmplAOA().map(r=>r.join(",")).join("\n");
+  download("interaction_template.csv","# Edit the 'value' column then upload. Orbits: 1=d3/2, 2=d5/2, 3=s1/2\n"+body,"text/csv");}
+function dlXLSX(){const ws=XLSX.utils.aoa_to_sheet(tmplAOA());const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"interaction");const out=XLSX.write(wb,{type:"array",bookType:"xlsx"});
+  download("interaction_template.xlsx",new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));}
+function dlINT(){const P=PRESETS.USDB;let s="! sd-shell interaction. Orbits: 1=d3/2 2=d5/2 3=s1/2\n! header line = count + three single-particle energies; then rows: a b c d J T V\n";
+  s+=`  63   ${P.spe['1']}   ${P.spe['2']}   ${P.spe['3']}\n`;
+  for(const r of P.tbme)s+=`  ${r[0]} ${r[1]} ${r[2]} ${r[3]}   ${r[4]} ${r[5]}   ${r[6]}\n`;
+  download("interaction_example.int",s,"text/plain");}
+function parseCSV(text){let spe={},rows=[];for(const line of text.split(/\r?\n/)){const tr=line.trim();if(!tr||tr.startsWith('#'))continue;
+  const c=tr.split(',').map(x=>x.trim());if(c[0].toLowerCase()==='kind')continue;
+  if(c[0].toUpperCase()==='SPE')spe[+c[1]]=+c[7];
+  else if(c[0].toUpperCase()==='TBME')rows.push([+c[1],+c[2],+c[3],+c[4],+c[5],+c[6],+c[7]]);}return {spe,rows};}
+function parseXLSXbuf(buf){const wb=XLSX.read(buf,{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1});let spe={},rows=[];
+  for(const r of aoa){if(!r[0]||String(r[0]).toLowerCase()==='kind')continue;
+    if(String(r[0]).toUpperCase()==='SPE')spe[+r[1]]=+r[7];
+    else if(String(r[0]).toUpperCase()==='TBME')rows.push([+r[1],+r[2],+r[3],+r[4],+r[5],+r[6],+r[7]]);}return {spe,rows};}
+function runUpload(name,parsed){const err=document.getElementById("err");err.textContent="";
+  if(!parsed.rows||parsed.rows.length<5){err.textContent="Couldn't read enough matrix elements from "+name+". Check the file.";return;}
+  document.querySelectorAll("#presets button").forEach(x=>x.classList.remove("on"));
+  R=compute("uploaded: "+name,parsed.rows,parsed.spe);render();
+  document.getElementById("results").scrollIntoView({behavior:"smooth"});}
+function pick(type){const fi=document.getElementById("fileInput");fi.value="";
+  fi.accept=type==='csv'?'.csv':(type==='xlsx'?'.xlsx,.xls':'.int,.txt');fi.click();}
+document.getElementById("fileInput").onchange=function(){const f=this.files[0];if(!f)return;
+  const ext=f.name.split('.').pop().toLowerCase();const err=document.getElementById("err");
+  if(ext==='xlsx'||ext==='xls'){f.arrayBuffer().then(b=>runUpload(f.name,parseXLSXbuf(b))).catch(e=>err.textContent="Excel read error: "+e.message);}
+  else{f.text().then(t=>runUpload(f.name, ext==='csv'?parseCSV(t):parseInt_(t))).catch(e=>err.textContent="Read error: "+e.message);}
+};
+
+// start with USDB shown
+R=compute("USDB",PRESETS.USDB.tbme,{1:PRESETS.USDB.spe['1'],2:PRESETS.USDB.spe['2'],3:PRESETS.USDB.spe['3']});
+render();
+</script>
+</body>
+</html>
